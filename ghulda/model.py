@@ -1,6 +1,5 @@
 import logging
 import sys
-from copy import deepcopy
 
 if 'ipykernel' in sys.modules and 'spyder' not in sys.modules:
     from tqdm.notebook import tqdm
