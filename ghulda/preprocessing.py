@@ -45,7 +45,7 @@ class TextTokenizer(object):
         for token in doc:
             palavra = token.orth_
             if len(token) >= self.min_length and token.pos_ in self.classes and self._is_alpha(
-                    palavra) and palavra not in self.stop_words:
+                    palavra) and (palavra.lower() not in self.stop_words or token.lemma_.lower() not in self.stop_words):
 
                 word = token.lemma_ if self.lemmatize else palavra
                 temp.append(word.lower())

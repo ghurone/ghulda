@@ -20,11 +20,12 @@ def add_bigram(documentos: list[list[str]], min_count: int = 5, delimiter: str =
 
     for i in range(len(documentos)):
         bi = [token for token in bigram[documentos[i]] if '_' in token]
-        documentos[i].extend(bi)  # adiciona no fim da lista os bigramas
+        documentos[i].extend(bi)  
 
 
 def create_dictionary(documentos: list[list[str]], n_abaixo: int = None, n_acima: float = None,
-                      keep_n: int = 1e5, keep_tokens: list = None) -> Dictionary:
+                      keep_n: int = 100000, keep_tokens: list = None) -> Dictionary:
+    
     dicio = Dictionary(documentos)
 
     if n_abaixo is not None or n_acima is not None:
