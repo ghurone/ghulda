@@ -1,71 +1,58 @@
-import sys
-import os
-import string
-from multiprocessing import Pool
-
 import spacy
+from tqdm.autonotebook import tqdm
 
-if 'ipykernel' in sys.modules and 'spyder' not in sys.modules:
-    from tqdm.notebook import tqdm
-else:
-    from tqdm import tqdm
+_classes_padrao = ('PROPN', 'NOUN', 'ADJ', 'VERB')
 
 
-def clean_space(text: str) -> str:
-    return ' '.join(text.split())
+class Tokenizer:
+    def __init__(
+        self,
+        lang: str = 'pt_core_news_lg',
+        classes: tuple[str] = None,
+        lemma: bool = True,
+        n_min_len: int = 1,
+        batch_size: int = 32,
+        n_process: int = -1
+    ) -> None:
+        
+        self.nlp = spacy.load(lang, disable=["parser", "ner", "attribute_ruler"])
 
 
-class TextTokenizer(object):
-    def __init__(self, nlp: spacy.language.Language, classes: list[str] = None, alfabeto: set = None,
-                 stop_words: list = None, min_length: int = 1, lemmatize: bool = True):
+        if not lemma and "lemmatizer" in self.nlp.pipe_names:
+            self.nlp.remove_pipe("lemmatizer")
 
-        if alfabeto is None:
-            self.alfabeto = set(string.ascii_letters + 'áàãâéêíóôõúüçÁÀÃÂÉÊÍÓÔÕÚÜÇ-')
-        else:
-            self.alfabeto = alfabeto
+        self.classes = classes or _classes_padrao
+        self.lemma = lemma
+        self.n_min_len = n_min_len
+        self.batch_size = batch_size
+        self.n_process = n_process
 
-        if stop_words is None:
-            self.stop_words = nlp.Defaults.stop_words
-        else:
-            self.stop_words = stop_words
+    def _tokenize_text(self, doc: spacy.tokens.Doc) -> list[str]:
+        tokens = []
 
-        if classes is None:
-            self.classes = ['PNONU', 'NOUN', 'ADJ', 'VERB']
-        else:
-            self.classes = classes
-
-        self.min_length = min_length
-        self.lemmatize = lemmatize
-        self.nlp = nlp
-
-    def text_tokenizer(self, text: str) -> list[str]:
-        doc = self.nlp(text)
-
-        temp = []
         for token in doc:
-            palavra = token.orth_
-            if len(token) >= self.min_length and token.pos_ in self.classes and self._is_alpha(
-                    palavra) and (palavra.lower() not in self.stop_words or token.lemma_.lower() not in self.stop_words):
+            if (
+                token.pos_ in self.classes
+                and len(token.orth_) > self.n_min_len
+                and token.orth_.replace('-', '').isalpha()
+            ):
+                word = token.lemma_ if self.lemma else token.orth_
+                tokens.append(word.lower())
 
-                word = token.lemma_ if self.lemmatize else palavra
-                temp.append(word.lower())
+        return tokens
 
-        return temp
+    def tokenize_texts(self, texts: list[str]) -> list[list[str]]:
+        tokenized_texts = []
 
-    def document_tokenizer(self, list_text: list[str], workers: int = -1, verbose: bool = True) -> list[list[str]]:
-        cpu_count = os.cpu_count() or 1
-        workers = max(1, min(cpu_count, cpu_count + workers + 1))
+        for doc in tqdm(
+            self.nlp.pipe(
+                texts,
+                batch_size=self.batch_size,
+                n_process=self.n_process
+            ),
+            total=len(texts)
+        ):
+            doc_tokens = self._tokenize_text(doc)
+            tokenized_texts.append(doc_tokens)
 
-        if verbose:
-            with Pool(processes=workers) as pool:
-                docs = list(tqdm(pool.imap(self.text_tokenizer, list_text), total=len(list_text)))
-        else:
-            with Pool(processes=workers) as pool:
-                docs = pool.map(self.text_tokenizer, list_text)
-
-        return docs
-
-    def _is_alpha(self, palavra) -> bool:
-        return set(palavra).issubset(self.alfabeto)
-
-
+        return tokenized_texts

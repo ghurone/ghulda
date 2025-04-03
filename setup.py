@@ -7,14 +7,14 @@ with open('README.md', 'rb') as f:
 setup(
     name='GhuLDA',
     packages=['ghulda'],
-    version='1.0.1',
+    version='1.1.0',
     description='Pacote com funções para processamento de modelos LDA',
     long_description=readme,
     long_description_content_type="text/markdown",
     author='Erick Ghuron',
     author_email='ghuron@usp.br',
     url='https://github.com/ghurone/ghulab',
-    install_requires=['gensim>=4.3.0', 'spacy>=3.7.2', 'requests>=2.31.0', 'tqdm>=4.66.1', 'numpy>=1.26.3'],
+    install_requires=['gensim==4.3.3', 'spacy==3.7.5', 'tqdm>=4.66.1'],
     license='MIT',
     keywords=['ghu', 'lda'],
     classifiers=[
