@@ -8,6 +8,7 @@ class Tokenizer:
     def __init__(
         self,
         lang: str = 'pt_core_news_lg',
+        disables: list[str] = None,
         classes: tuple[str] = None,
         lemma: bool = True,
         n_min_len: int = 1,
@@ -15,7 +16,10 @@ class Tokenizer:
         n_process: int = -1
     ) -> None:
         
-        self.nlp = spacy.load(lang, disable=["parser", "ner", "attribute_ruler"])
+        if disables is None:
+            self.nlp = spacy.load(lang, disable=["parser", "ner", "attribute_ruler"])
+        else:
+            self.nlp = spacy.load(lang, disable=disables)
 
 
         if not lemma and "lemmatizer" in self.nlp.pipe_names:
