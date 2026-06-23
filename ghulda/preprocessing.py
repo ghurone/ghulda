@@ -25,7 +25,7 @@ class Tokenizer:
         if not lemma and "lemmatizer" in self.nlp.pipe_names:
             self.nlp.remove_pipe("lemmatizer")
 
-        self.classes = classes or _classes_padrao
+        self.classes = frozenset(classes or _classes_padrao)
         self.lemma = lemma
         self.n_min_len = n_min_len
         self.batch_size = batch_size

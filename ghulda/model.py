@@ -17,10 +17,9 @@ def add_bigram(documentos: list[list[str]],
                threshold: int = 5
                ) -> None:
     
-    bigram = Phrases(documentos, min_count=min_count, delimiter=delimiter, threshold=threshold)
-    for i in range(len(documentos)):
-        bi = [token for token in bigram[documentos[i]] if "_" in token]
-        documentos[i].extend(bi)
+    bigram = Phrases(documentos, min_count=min_count, delimiter=delimiter, threshold=threshold).freeze()
+    for doc in documentos:
+        doc.extend(token for token in bigram[doc] if delimiter in token)
 
 
 def create_dictionary(documentos: list[list[str]],
@@ -36,7 +35,7 @@ def create_dictionary(documentos: list[list[str]],
         if n_abaixo is None:
             n_abaixo = 1
         if n_acima is None:
-            n_acima = 0.5
+            n_acima = 1.0
 
         dicio.filter_extremes(no_below=n_abaixo, no_above=n_acima, keep_n=keep_n, keep_tokens=keep_tokens)
 
@@ -48,10 +47,8 @@ def create_corpus(dicionario: Dictionary,
                   verbose: bool = False
                   ) -> list[list[tuple[int, int]]]:
     
-    if verbose:
-        return [dicionario.doc2bow(doc) for doc in tqdm(documentos, desc="Corpus")]
-    else:
-        return [dicionario.doc2bow(doc) for doc in documentos]
+    docs = tqdm(documentos, desc="Corpus") if verbose else documentos
+    return [dicionario.doc2bow(doc) for doc in docs]
 
 
 def calc_coherence(model, documents, dictionary, corpus, method="c_v") -> CoherenceModel:
@@ -85,7 +82,7 @@ class ModelLDA:
         passes: int = 25,
         verbose: bool = True,
         random_seed: int = 99,
-        dtype=np.float64,
+        dtype=np.float32,
     ):
         self.corpus = corpus
         self.id2word = id2word
