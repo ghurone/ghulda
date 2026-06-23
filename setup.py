@@ -7,7 +7,7 @@ with open('README.md', 'rb') as f:
 setup(
     name='GhuLDA',
     packages=['ghulda'],
-    version='2.0.1',
+    version='2.0.2',
     description='Pacote com funções para processamento de modelos LDA',
     long_description=readme,
     long_description_content_type="text/markdown",
